@@ -51,7 +51,7 @@ export default function AccountantDashboard() {
   const collectionRate = totalBilled > 0 ? (totalPaid / totalBilled) * 100 : 0
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 page-container">
       <PageHeader 
         title="Finance Overview" 
         subtitle={new Date().toLocaleDateString('en-KE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

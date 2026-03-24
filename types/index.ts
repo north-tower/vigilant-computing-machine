@@ -241,4 +241,40 @@ export interface DeficitTrajectory {
   projected_collection: number 
   projected_deficit: number 
   risk_level: 'low' | 'medium' | 'high' 
-}
+} 
+
+export enum MessagePriority { 
+  NORMAL = 'NORMAL', 
+  URGENT = 'URGENT', 
+  FINANCIAL = 'FINANCIAL', 
+  ACADEMIC = 'ACADEMIC', 
+} 
+ 
+ export enum TriageLabel { 
+   FEE_QUERY = 'FEE_QUERY', 
+   ACADEMIC_CONCERN = 'ACADEMIC_CONCERN', 
+   DISCIPLINARY = 'DISCIPLINARY', 
+   EMERGENCY = 'EMERGENCY', 
+   GENERAL_INQUIRY = 'GENERAL_INQUIRY', 
+   COMPLAINT = 'COMPLAINT', 
+   PRAISE = 'PRAISE', 
+ } 
+ 
+ export interface Message { 
+   id: string 
+   sender: AuthUser 
+   subject: string 
+   body: string 
+   priority: MessagePriority 
+   triage_label: TriageLabel | null 
+   triage_confidence: number | null 
+   is_read: boolean 
+   read_at: string | null 
+   created_at: string 
+ } 
+ 
+ export interface SendMessageDto { 
+   subject: string 
+   body: string 
+   priority: MessagePriority 
+ } 

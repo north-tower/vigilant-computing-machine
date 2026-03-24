@@ -23,8 +23,11 @@ const jetbrainsMono = JetBrains_Mono({
 }) 
 
 export const metadata: Metadata = { 
-  title: 'Sychar CoPilot', 
+  title: { default: 'Sychar CoPilot', template: '%s — Sychar CoPilot' }, 
   description: 'Nkoroi Mixed Secondary Day School Management System', 
+  icons: { 
+    icon: '/favicon.svg',
+  }, 
 } 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) { 

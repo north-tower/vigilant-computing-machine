@@ -35,7 +35,7 @@ export default function DisciplinePage() {
   const isAdmin = user.role === UserRole.PRINCIPAL || user.role === UserRole.DEPUTY_PRINCIPAL
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 page-container">
       <PageHeader 
         title={isAdmin ? "Discipline Management" : "Discipline"} 
         action={

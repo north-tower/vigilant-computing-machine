@@ -7,6 +7,8 @@ import { LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
+import { useInbox } from '@/hooks/useComms'
+
 interface SidebarProps {
   isOpen: boolean
   onToggle: () => void
@@ -60,6 +62,7 @@ const NAV_CONFIG: Record<string, NavItem[]> = {
 
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const { user, logout } = useAuth()
+  const { unreadCount } = useInbox()
   
   if (!user) return null
 
@@ -90,6 +93,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
             label={item.label} 
             href={item.href} 
             icon={item.icon as any} 
+            badge={item.label === 'Messages' ? unreadCount : undefined}
           />
         ))}
       </nav>
