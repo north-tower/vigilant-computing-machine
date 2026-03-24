@@ -57,7 +57,7 @@ export default function DisciplinePage() {
 
       {isAdmin ? (
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="bg-surface border border-border p-1">
+          <TabsList className="mb-6">
             <TabsTrigger value="all" className="data-[state=active]:bg-accent data-[state=active]:text-bg">All Incidents</TabsTrigger>
             <TabsTrigger value="open" className="data-[state=active]:bg-danger data-[state=active]:text-white">Open</TabsTrigger>
             <TabsTrigger value="escalated" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">Escalated</TabsTrigger>
