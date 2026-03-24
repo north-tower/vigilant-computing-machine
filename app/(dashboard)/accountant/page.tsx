@@ -46,8 +46,8 @@ export default function AccountantDashboard() {
   }
 
   const activeFee = feeStructures?.find(f => f.form === selectedForm)
-  const totalBilled = balances?.reduce((acc, curr) => acc + curr.total_billed, 0) || 0
-  const totalPaid = balances?.reduce((acc, curr) => acc + curr.total_paid, 0) || 0
+  const totalBilled = balances?.reduce((acc, curr) => acc + Number(curr.total_billed), 0) || 0
+  const totalPaid = balances?.reduce((acc, curr) => acc + Number(curr.total_paid), 0) || 0
   const collectionRate = totalBilled > 0 ? (totalPaid / totalBilled) * 100 : 0
 
   return (

@@ -49,9 +49,9 @@ export default function FeeBalanceTable({ balances, isLoading, onPay, onStkPush 
   if (balances.length === 0) return <EmptyState message="No fee balances found" />
 
   const totals = balances.reduce((acc, curr) => ({
-    billed: acc.billed + curr.total_billed,
-    paid: acc.paid + curr.total_paid,
-    balance: acc.balance + curr.balance
+    billed: acc.billed + Number(curr.total_billed),
+    paid: acc.paid + Number(curr.total_paid),
+    balance: acc.balance + Number(curr.balance)
   }), { billed: 0, paid: 0, balance: 0 })
 
   const isAccountant = user?.role === UserRole.ACCOUNTANT
@@ -90,17 +90,17 @@ export default function FeeBalanceTable({ balances, isLoading, onPay, onStkPush 
                 </td>
                 <td className="px-6 py-4 font-mono font-medium">
                   <span className={cn(
-                    balance.balance === 0 ? "text-success" : 
-                    balance.balance >= 5000 ? "text-danger" : "text-amber"
+                    Number(balance.balance) === 0 ? "text-success" : 
+                    Number(balance.balance) >= 5000 ? "text-danger" : "text-amber"
                   )}>
-                    {balance.balance === 0 ? "Cleared" : `KES ${balance.balance.toLocaleString('en-KE')}`}
+                    {Number(balance.balance) === 0 ? "Cleared" : `KES ${Number(balance.balance).toLocaleString('en-KE')}`}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-text-muted font-mono">
-                  KES {balance.total_paid.toLocaleString('en-KE')}
+                  KES {Number(balance.total_paid).toLocaleString('en-KE')}
                 </td>
                 <td className="px-6 py-4 text-text-muted font-mono">
-                  KES {balance.total_billed.toLocaleString('en-KE')}
+                  KES {Number(balance.total_billed).toLocaleString('en-KE')}
                 </td>
                 <td className="px-6 py-4">
                   {isAccountant && (

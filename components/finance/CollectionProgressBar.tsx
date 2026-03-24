@@ -11,7 +11,9 @@ interface CollectionProgressBarProps {
 
 export default function CollectionProgressBar({ collected, total, label }: CollectionProgressBarProps) {
   const [width, setWidth] = useState(0)
-  const rate = total > 0 ? (collected / total) * 100 : 0
+  const safeCollected = Number(collected)
+  const safeTotal = Number(total)
+  const rate = safeTotal > 0 ? (safeCollected / safeTotal) * 100 : 0
   
   useEffect(() => {
     const timer = setTimeout(() => setWidth(rate), 100)
@@ -45,7 +47,7 @@ export default function CollectionProgressBar({ collected, total, label }: Colle
       </div>
 
       <div className="text-[12px] font-mono text-text-muted">
-        KES {collected.toLocaleString('en-KE')} collected of KES {total.toLocaleString('en-KE')}
+        KES {safeCollected.toLocaleString('en-KE')} collected of KES {safeTotal.toLocaleString('en-KE')}
       </div>
     </div>
   )

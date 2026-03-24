@@ -52,20 +52,25 @@ export default function DeficitChart({ trajectory }: DeficitChartProps) {
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+      const actualData = payload.find((p: any) => p.dataKey === 'actual')
+      const projectedData = payload.find((p: any) => p.dataKey === 'projected')
+
       return (
         <div className="bg-surface border border-border rounded-lg p-3 shadow-xl text-xs space-y-2">
           <p className="font-bold text-text">Day {payload[0].payload.day}</p>
           <div className="space-y-1">
-            {payload[0].value !== null && (
+            {actualData && actualData.value !== null && (
               <p className="flex justify-between gap-4">
                 <span className="text-text-muted">Actual:</span>
-                <span className="text-accent font-mono">KES {Math.round(payload[0].value).toLocaleString()}</span>
+                <span className="text-accent font-mono">KES {Math.round(actualData.value).toLocaleString()}</span>
               </p>
             )}
-            <p className="flex justify-between gap-4">
-              <span className="text-text-muted">Projected:</span>
-              <span className="text-amber font-mono">KES {Math.round(payload[1].value).toLocaleString()}</span>
-            </p>
+            {projectedData && (
+              <p className="flex justify-between gap-4">
+                <span className="text-text-muted">Projected:</span>
+                <span className="text-amber font-mono">KES {Math.round(projectedData.value).toLocaleString()}</span>
+              </p>
+            )}
           </div>
         </div>
       )
