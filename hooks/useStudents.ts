@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
-import { Student, MedicalCard } from '@/types'
+import { Student, MedicalCard, Form, Stream } from '@/types'
 
 export function useStudents(filters?: { form?: string; stream?: string; gender?: string }) {
   return useQuery<Student[], Error>({
@@ -31,5 +31,25 @@ export function useMedicalCard(studentId: string) {
       return data
     },
     enabled: !!studentId,
+  })
+}
+
+export function useCreateStudent() {
+  const queryClient = useQueryClient()
+  return useMutation<Student, Error, { 
+    full_name: string; 
+    admission_number: string; 
+    form: Form; 
+    stream: Stream; 
+    gender: 'male' | 'female'; 
+    date_of_birth?: string;
+  }>({
+    mutationFn: async (studentData) => {
+      const { data } = await api.post('/students', studentData)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] })
+    },
   })
 }
