@@ -30,8 +30,8 @@ export default function MedicalCardView({ studentId }: MedicalCardViewProps) {
         <div>
           <h3 className="text-sm font-medium text-text-muted mb-2">Allergies</h3>
           <div className="flex flex-wrap gap-2">
-            {card.allergies.length > 0 ? (
-              card.allergies.map(allergy => <span key={allergy} className="px-2 py-1 text-xs font-medium bg-danger/20 text-danger rounded-full">{allergy}</span>)
+            {card.allergies.filter(a => a.trim() !== '').length > 0 ? (
+              card.allergies.filter(a => a.trim() !== '').map(allergy => <span key={allergy} className="px-2 py-1 text-xs font-medium bg-danger/20 text-danger rounded-full">{allergy}</span>)
             ) : <p className="text-xs text-text-muted">None reported</p>}
           </div>
         </div>
@@ -39,8 +39,8 @@ export default function MedicalCardView({ studentId }: MedicalCardViewProps) {
         <div>
           <h3 className="text-sm font-medium text-text-muted mb-2">Chronic Conditions</h3>
           <div className="flex flex-wrap gap-2">
-            {card.chronic_conditions.length > 0 ? (
-              card.chronic_conditions.map(condition => <span key={condition} className="px-2 py-1 text-xs font-medium bg-amber/20 text-amber rounded-full">{condition}</span>)
+            {card.chronic_conditions.filter(c => c.trim() !== '').length > 0 ? (
+              card.chronic_conditions.filter(c => c.trim() !== '').map(condition => <span key={condition} className="px-2 py-1 text-xs font-medium bg-amber/20 text-amber rounded-full">{condition}</span>)
             ) : <p className="text-xs text-text-muted">None reported</p>}
           </div>
         </div>
@@ -48,8 +48,8 @@ export default function MedicalCardView({ studentId }: MedicalCardViewProps) {
         <div>
           <h3 className="text-sm font-medium text-text-muted mb-2">Current Medications</h3>
           <div className="flex flex-wrap gap-2">
-            {card.current_medications.length > 0 ? (
-              card.current_medications.map(med => <span key={med} className="px-2 py-1 text-xs font-medium bg-accent/20 text-accent rounded-full">{med}</span>)
+            {card.current_medications.filter(m => m.trim() !== '').length > 0 ? (
+              card.current_medications.filter(m => m.trim() !== '').map(med => <span key={med} className="px-2 py-1 text-xs font-medium bg-accent/20 text-accent rounded-full">{med}</span>)
             ) : <p className="text-xs text-text-muted">None</p>}
           </div>
         </div>

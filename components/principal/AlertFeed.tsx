@@ -31,7 +31,7 @@ export default function AlertFeed() {
   })
   const { data: messages } = useQuery<Message[]>({ 
     queryKey: ['inbox', { is_read: false }], 
-    queryFn: async () => (await api.get('/comms/messages', { params: { is_read: false } })).data 
+    queryFn: async () => (await api.get('/comms/inbox', { params: { is_read: false } })).data 
   })
 
   // Compute alerts

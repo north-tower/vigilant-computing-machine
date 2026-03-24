@@ -6,7 +6,7 @@ export function useInbox(filters?: { is_read?: boolean; priority?: MessagePriori
   const query = useQuery<Message[], Error>({
     queryKey: ['inbox', filters],
     queryFn: async () => {
-      const { data } = await api.get('/comms/messages', { params: filters })
+      const { data } = await api.get('/comms/inbox', { params: filters })
       return data
     },
   })
@@ -20,7 +20,7 @@ export function useMessage(id: string) {
   return useQuery<Message, Error>({
     queryKey: ['message', id],
     queryFn: async () => {
-      const { data } = await api.get(`/comms/messages/${id}`)
+      const { data } = await api.get(`/comms/${id}`)
       return data
     },
     enabled: !!id,
@@ -31,7 +31,7 @@ export function useMarkAsRead() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, string>({
     mutationFn: async (id: string) => {
-      await api.patch(`/comms/messages/${id}/read`)
+      await api.patch(`/comms/${id}/read`)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inbox'] })
@@ -41,9 +41,9 @@ export function useMarkAsRead() {
 
 export function useSendMessage() {
   const queryClient = useQueryClient()
-  return useMutation<Message, Error, { subject: string; body: string; priority: MessagePriority }>({
+  return useMutation<Message, Error, { subject: string; body: string; priority: MessagePriority; recipientId?: string }>({
     mutationFn: async (messageData) => {
-      const { data } = await api.post('/comms/messages', messageData)
+      const { data } = await api.post('/comms/send', messageData)
       return data
     },
     onSuccess: () => {
