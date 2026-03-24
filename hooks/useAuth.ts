@@ -8,7 +8,7 @@ const ROLE_ROUTES: Record<UserRole, string> = {
   [UserRole.HOD]: '/hod', 
   [UserRole.CLASS_TEACHER]: '/teacher', 
   [UserRole.ACCOUNTANT]: '/accountant', 
-  [UserRole.PARENT]: '/comms', 
+  [UserRole.PARENT]: '/parent', 
   [UserRole.NURSE]: '/students', 
 } 
 

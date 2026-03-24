@@ -51,6 +51,7 @@ const NAV_CONFIG: Record<string, NavItem[]> = {
     { label: 'Reports', href: '/accountant/reports', icon: 'BarChart2' },
   ],
   [UserRole.PARENT]: [
+    { label: 'Dashboard', href: '/parent', icon: 'LayoutDashboard' },
     { label: 'Messages', href: '/comms', icon: 'MessageSquare' },
     { label: 'My Child', href: '/students', icon: 'User' },
   ],

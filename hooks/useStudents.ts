@@ -53,3 +53,16 @@ export function useCreateStudent() {
     },
   })
 }
+
+export function useLinkChild() {
+  const queryClient = useQueryClient()
+  return useMutation<Student, Error, string>({
+    mutationFn: async (admission_number: string) => {
+      const { data } = await api.post('/students/link-parent', { admission_number })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] })
+    },
+  })
+}

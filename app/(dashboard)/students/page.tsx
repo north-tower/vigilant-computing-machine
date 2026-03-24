@@ -7,16 +7,18 @@ import PageHeader from '@/components/shared/PageHeader'
 import StudentFilterBar from '@/components/students/StudentFilterBar'
 import StudentTable from '@/components/students/StudentTable'
 import StudentForm from '@/components/students/StudentForm'
+import LinkChildForm from '@/components/students/LinkChildForm'
 import Modal from '@/components/shared/Modal'
 import EmptyState from '@/components/shared/EmptyState'
 import LoadingSkeleton from '@/components/shared/LoadingSkeleton'
 import { Button } from '@/components/ui/button'
-import { Users, Plus } from 'lucide-react'
+import { Users, Plus, Link as LinkIcon } from 'lucide-react'
 import { UserRole } from '@/types'
 
 export default function StudentsPage() {
   const { user, isAuthenticated } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false)
   const [filters, setFilters] = useState({
     form: '',
     stream: '',
@@ -52,29 +54,51 @@ export default function StudentsPage() {
   if (!isAuthenticated || !user) return null
 
   const canAddStudent = user?.role === UserRole.PRINCIPAL || user?.role === UserRole.DEPUTY_PRINCIPAL
+  const isParent = user?.role === UserRole.PARENT
 
   return (
     <div className="page-container">
       <PageHeader 
-        title="Students" 
-        action={canAddStudent && (
-          <Button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-accent text-bg font-bold"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Student
-          </Button>
-        )}
+        title={isParent ? "My Child" : "Students"} 
+        action={
+          <>
+            {canAddStudent && (
+              <Button 
+                onClick={() => setIsModalOpen(true)}
+                className="bg-accent text-bg font-bold"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Student
+              </Button>
+            )}
+            {isParent && (
+              <Button 
+                onClick={() => setIsLinkModalOpen(true)}
+                className="bg-accent text-bg font-bold"
+              >
+                <LinkIcon className="h-4 w-4 mr-2" />
+                Link Child
+              </Button>
+            )}
+          </>
+        }
       />
 
-      {user?.role !== UserRole.CLASS_TEACHER && (
+      {!isParent && user?.role !== UserRole.CLASS_TEACHER && (
         <StudentFilterBar filters={filters} onFilterChange={setFilters} />
       )}
 
       {isLoading && <LoadingSkeleton rows={10} cols={5} />}
       {error && <EmptyState message="Failed to load students." />}
-      {!isLoading && !error && filteredStudents.length === 0 && <EmptyState message="No students found." icon={Users} />}
+      {!isLoading && !error && filteredStudents.length === 0 && (
+        <div className="py-12">
+          <EmptyState 
+            message={isParent ? "No child linked to your account yet." : "No students found."} 
+            subMessage={isParent ? "Click 'Link Child' above to connect your child's record using their admission number." : undefined}
+            icon={Users} 
+          />
+        </div>
+      )}
       {!isLoading && !error && filteredStudents.length > 0 && <StudentTable students={filteredStudents} />}
 
       <Modal
@@ -84,6 +108,15 @@ export default function StudentsPage() {
         width={600}
       >
         <StudentForm onSuccess={() => setIsModalOpen(false)} />
+      </Modal>
+
+      <Modal
+        isOpen={isLinkModalOpen}
+        onClose={() => setIsLinkModalOpen(false)}
+        title="Link Child to Account"
+        width={480}
+      >
+        <LinkChildForm onSuccess={() => setIsLinkModalOpen(false)} />
       </Modal>
     </div>
   )
