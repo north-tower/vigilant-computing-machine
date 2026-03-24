@@ -6,10 +6,12 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:http://51.11.182.211:6901/api/v1}
+        # Pass the backend URL during build time as Next.js needs it for client-side API calls
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:6901/api/v1}
     container_name: sychar-frontend
     restart: always
     ports:
       - "7000:7000"
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:http://51.11.182.211:6901/api/v1}
+      # Also provide at runtime for any server-side rendering
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:6901/api/v1}
