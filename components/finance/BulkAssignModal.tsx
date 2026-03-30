@@ -39,17 +39,20 @@ export default function BulkAssignModal({ isOpen, onClose, onSuccess }: BulkAssi
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {step === 'configure' && (
         <>
-          <div className="rounded-lg border border-amber bg-amber/10 p-3 text-sm text-amber flex gap-2">
-            <AlertTriangle className="h-4 w-4 mt-0.5" />
-            <p>This will create fee accounts for all active students in the selected form. Existing accounts are not affected.</p>
+          <div className="rounded-xl border border-amber/30 bg-amber/10 p-4 text-sm text-amber flex gap-3">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <p className="leading-relaxed">
+              This will create fee accounts for all active students in the selected form.
+              Existing accounts are not affected.
+            </p>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm text-text-muted">Fee Structure</label>
+          <div className="space-y-2.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-text-muted">Fee Structure</label>
             <select
-              className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-sm"
+              className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-accent"
               value={feeStructureId}
               onChange={(e) => setFeeStructureId(e.target.value)}
             >
@@ -61,37 +64,45 @@ export default function BulkAssignModal({ isOpen, onClose, onSuccess }: BulkAssi
               ))}
             </select>
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={() => setStep('confirm')} disabled={!selected}>Assign Fees →</Button>
+          <div className="pt-1 flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose} className="min-w-24">Cancel</Button>
+            <Button onClick={() => setStep('confirm')} disabled={!selected} className="min-w-32">Assign Fees →</Button>
           </div>
         </>
       )}
 
       {step === 'confirm' && selected && (
         <>
-          <div className="rounded-lg border border-border p-4 text-sm">
-            <p className="font-medium text-text mb-1">Confirm Assignment</p>
-            <p>{selected.form.replace('form_', 'Form ')} · {selected.term.replace('_', ' ')} · {selected.academic_year}</p>
-            <p className="font-mono">KES {Number(selected.total_amount).toLocaleString('en-KE')}</p>
-            <p className="mt-2 text-text-muted">Arrears will be automatically included from previous term.</p>
+          <div className="rounded-xl border border-border p-4 text-sm space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Confirm Assignment</p>
+            <p className="font-medium text-text">
+              {selected.form.replace('form_', 'Form ')} · {selected.term.replace('_', ' ')} · {selected.academic_year}
+            </p>
+            <p className="font-mono text-text">KES {Number(selected.total_amount).toLocaleString('en-KE')}</p>
+            <p className="text-text-muted leading-relaxed">
+              Arrears will be automatically included from previous term.
+            </p>
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setStep('configure')}>← Back</Button>
-            <Button onClick={runAssign}>Confirm Assignment</Button>
+          <div className="pt-1 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setStep('configure')} className="min-w-24">← Back</Button>
+            <Button onClick={runAssign} className="min-w-36">Confirm Assignment</Button>
           </div>
         </>
       )}
 
-      {step === 'loading' && <div className="py-8 text-center text-text-muted">Assigning fee accounts...</div>}
+      {step === 'loading' && (
+        <div className="py-10 text-center text-sm text-text-muted">Assigning fee accounts...</div>
+      )}
 
       {step === 'result' && (
-        <div className="py-4 text-center space-y-3">
+        <div className="py-4 text-center space-y-4">
           {!error ? (
             <>
               <CheckCircle2 className="h-12 w-12 text-success mx-auto" />
-              <p className="font-medium">Fee assignment complete</p>
-              <p className="text-sm text-text-muted">{bulkAssign.data?.created || 0} accounts created · {bulkAssign.data?.skipped || 0} skipped</p>
+              <p className="font-medium text-text">Fee assignment complete</p>
+              <p className="text-sm text-text-muted">
+                {bulkAssign.data?.created || 0} accounts created · {bulkAssign.data?.skipped || 0} skipped
+              </p>
             </>
           ) : (
             <>
@@ -99,9 +110,9 @@ export default function BulkAssignModal({ isOpen, onClose, onSuccess }: BulkAssi
               <p className="text-danger">{error}</p>
             </>
           )}
-          <div className="flex justify-center gap-2">
-            {error && <Button variant="outline" onClick={() => setStep('configure')}>Try Again</Button>}
-            <Button onClick={onClose}>Done</Button>
+          <div className="pt-1 flex justify-center gap-2">
+            {error && <Button variant="outline" onClick={() => setStep('configure')} className="min-w-24">Try Again</Button>}
+            <Button onClick={onClose} className="min-w-24">Done</Button>
           </div>
         </div>
       )}

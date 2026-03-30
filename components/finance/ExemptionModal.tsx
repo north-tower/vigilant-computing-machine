@@ -71,23 +71,51 @@ export default function ExemptionModal({ isOpen, onClose, account }: ExemptionMo
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-text-muted">
+    <div className="space-y-5">
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Student</p>
+        <p className="text-sm text-text">
         {account.student.full_name} · {account.student.form.replace('form_', 'Form ')}{account.student.stream}
-      </p>
-      <div className="text-sm space-y-1">
-        <div className="flex justify-between"><span>Billed amount</span><span className="font-mono">KES {Number(account.billed_amount).toLocaleString('en-KE')}</span></div>
-        <div className="flex justify-between"><span>Current exemption</span><span className="font-mono text-success">KES {Number(account.exemption_amount).toLocaleString('en-KE')}</span></div>
-        <div className="border-t border-border pt-1 flex justify-between font-medium"><span>Effective bill</span><span className="font-mono">KES {Math.max(0, effectiveBill).toLocaleString('en-KE')}</span></div>
+        </p>
       </div>
-      <div className="space-y-2">
-        <label className="text-sm">Exemption Amount</label>
-        <Input type="number" step="0.01" min={0} max={Number(account.billed_amount)} value={amount} onChange={(e) => setAmount(Number(e.target.value || 0))} />
-        <p className="text-xs text-text-muted">New effective bill: KES {Math.max(0, effectiveBill).toLocaleString('en-KE')}</p>
+
+      <div className="rounded-xl border border-border p-4 text-sm space-y-2">
+        <div className="flex justify-between">
+          <span className="text-text-muted">Billed amount</span>
+          <span className="font-mono text-text">KES {Number(account.billed_amount).toLocaleString('en-KE')}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-text-muted">Current exemption</span>
+          <span className="font-mono text-success">KES {Number(account.exemption_amount).toLocaleString('en-KE')}</span>
+        </div>
+        <div className="border-t border-border pt-2 mt-1 flex justify-between font-medium">
+          <span className="text-text">Effective bill</span>
+          <span className="font-mono text-text">KES {Math.max(0, effectiveBill).toLocaleString('en-KE')}</span>
+        </div>
       </div>
-      <div className="space-y-2">
-        <label className="text-sm">Reason</label>
-        <select className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-sm" value={reason} onChange={(e) => setReason(e.target.value)}>
+
+      <div className="space-y-2.5">
+        <label className="text-xs font-semibold uppercase tracking-wider text-text-muted">Exemption Amount</label>
+        <Input
+          type="number"
+          step="0.01"
+          min={0}
+          max={Number(account.billed_amount)}
+          value={amount}
+          onChange={(e) => setAmount(Number(e.target.value || 0))}
+        />
+        <p className="text-xs text-text-muted">
+          New effective bill: KES {Math.max(0, effectiveBill).toLocaleString('en-KE')}
+        </p>
+      </div>
+
+      <div className="space-y-2.5">
+        <label className="text-xs font-semibold uppercase tracking-wider text-text-muted">Reason</label>
+        <select
+          className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-accent"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+        >
           <option value="">Select reason...</option>
           {reasons.map((r) => (
             <option key={r} value={r}>{r}</option>
@@ -98,7 +126,7 @@ export default function ExemptionModal({ isOpen, onClose, account }: ExemptionMo
         )}
       </div>
       {inlineError && <p className="text-xs text-danger">{inlineError}</p>}
-      <Button onClick={submit} disabled={unchanged || applyMutation.isLoading} className="w-full">
+      <Button onClick={submit} disabled={unchanged || applyMutation.isLoading} className="w-full h-10 font-semibold">
         {applyMutation.isLoading ? 'Saving...' : 'Apply Exemption'}
       </Button>
     </div>
