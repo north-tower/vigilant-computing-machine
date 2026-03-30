@@ -4,21 +4,22 @@ import { useState, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { MpesaStatus, Student, FeeStructure } from '@/types'
+import { MpesaStatus, Student, FeeAccountStatus } from '@/types'
 import { useStudents } from '@/hooks/useStudents'
-import { useFeeStructures, useInitiateSTKPush, useTransactionStatus, useStudentBalance } from '@/hooks/useFinance'
+import { useInitiateSTKPush, useTransactionStatus, useStudentFeeHistory } from '@/hooks/useFinance'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Search, X, Check, Smartphone, AlertCircle, CheckCircle2, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import ArrearsTag from './ArrearsTag'
 
 type STKState = 'FORM' | 'WAITING' | 'RESULT'
 
 const stkSchema = z.object({
   studentId: z.string().uuid('Please select a student'),
-  feeStructureId: z.string().uuid('Please select a fee structure'),
+  feeAccountId: z.string().uuid('Please select a fee account'),
   amount: z.number().positive('Amount must be positive'),
   phone: z.string().regex(/^2547\d{8}$/, 'Invalid phone number (must be 2547XXXXXXXX)'),
 })
@@ -35,11 +36,12 @@ export default function MpesaSTKModal({ isOpen, onClose, defaultStudentId }: Mpe
   const [stkState, setStkState] = useState<STKState>('FORM')
   const [searchTerm, setSearch] = useState('')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [showAllAccounts, setShowAllAccounts] = useState(false)
   const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState(60)
 
   const { data: students } = useStudents()
-  const { data: feeStructures } = useFeeStructures()
+  const { history } = useStudentFeeHistory(selectedStudent?.id || '')
   const initiateMutation = useInitiateSTKPush()
   
   const {
@@ -56,8 +58,8 @@ export default function MpesaSTKModal({ isOpen, onClose, defaultStudentId }: Mpe
     }
   })
 
-  const selectedStudentId = watch('studentId')
-  const { data: balanceData } = useStudentBalance(selectedStudentId)
+  const selectedAccountId = watch('feeAccountId')
+  const selectedAccount = useMemo(() => history.find((a) => a.id === selectedAccountId), [history, selectedAccountId])
 
   const { data: transaction } = useTransactionStatus(
     checkoutRequestId || '',
@@ -101,7 +103,11 @@ export default function MpesaSTKModal({ isOpen, onClose, defaultStudentId }: Mpe
 
   const onSubmit = async (data: STKFormData) => {
     try {
-      const result = await initiateMutation.mutateAsync(data)
+      const result = await initiateMutation.mutateAsync({
+        studentId: data.studentId,
+        amount: data.amount,
+        phone_number: data.phone,
+      })
       setCheckoutRequestId(result.checkout_request_id)
       setStkState('WAITING')
       setTimeLeft(60)
@@ -162,26 +168,44 @@ export default function MpesaSTKModal({ isOpen, onClose, defaultStudentId }: Mpe
       </div>
 
       <div className="space-y-2">
-        <Label>Fee Structure</Label>
+        <Label>Fee Account</Label>
         <select 
-          {...register('feeStructureId')}
+          {...register('feeAccountId')}
           className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-accent"
         >
-          <option value="">Select structure...</option>
-          {feeStructures?.map(fs => (
-            <option key={fs.id} value={fs.id}>
-              {fs.form.replace('_', ' ').toUpperCase()} · {fs.term.replace('_', ' ')} · {fs.academic_year}
+          <option value="">Select account...</option>
+          {history
+            .filter((acc) => showAllAccounts || acc.status !== FeeAccountStatus.CLEARED)
+            .map((acc) => (
+            <option key={acc.id} value={acc.id}>
+              {acc.fee_structure.term.replace('_', ' ')} · {acc.fee_structure.academic_year} · Balance: KES {Number(acc.balance).toLocaleString('en-KE')}
             </option>
           ))}
         </select>
-        {errors.feeStructureId && <p className="text-xs text-danger">{errors.feeStructureId.message}</p>}
+        <label className="inline-flex items-center gap-2 text-xs text-text-muted">
+          <input type="checkbox" checked={showAllAccounts} onChange={(e) => setShowAllAccounts(e.target.checked)} />
+          Show all accounts
+        </label>
+        {errors.feeAccountId && <p className="text-xs text-danger">{errors.feeAccountId.message}</p>}
       </div>
+
+      {selectedAccount && (
+        <div className="rounded-lg border border-border p-3 text-xs space-y-1">
+          <p>Balance: <span className="font-mono">KES {Number(selectedAccount.balance).toLocaleString('en-KE')}</span></p>
+          <ArrearsTag amount={Number(selectedAccount.arrears_brought_forward)} />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Amount</Label>
-          <Input type="number" placeholder="KES" {...register('amount', { valueAsNumber: true })} />
-          {balanceData && <p className="text-[10px] text-amber">Balance: KES {balanceData.balance.toLocaleString('en-KE')}</p>}
+          <Input type="number" placeholder="KES" max={selectedAccount ? Number(selectedAccount.balance) : undefined} {...register('amount', { valueAsNumber: true })} />
+          {selectedAccount && <p className="text-[10px] text-amber">Balance: KES {Number(selectedAccount.balance).toLocaleString('en-KE')}</p>}
+          {selectedAccount && (
+            <Button type="button" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setValue('amount', Number(selectedAccount.balance))}>
+              Pay full
+            </Button>
+          )}
         </div>
         <div className="space-y-2">
           <Label>M-Pesa Phone</Label>

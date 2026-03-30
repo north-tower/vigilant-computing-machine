@@ -4,9 +4,9 @@ import { useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { PaymentMethod, Student, FeeStructure } from '@/types'
+import { PaymentMethod, Student, StudentFeeAccount, FeeAccountStatus } from '@/types'
 import { useStudents } from '@/hooks/useStudents'
-import { useFeeStructures, useRecordPayment, useStudentBalance } from '@/hooks/useFinance'
+import { useRecordPayment, useStudentFeeHistory } from '@/hooks/useFinance'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,10 +14,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Loader2, Search, X, Check, Smartphone, Banknote, Landmark } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import ArrearsTag from './ArrearsTag'
 
 const paymentSchema = z.object({
   studentId: z.string().uuid('Please select a student'),
-  feeStructureId: z.string().uuid('Please select a fee structure'),
+  feeAccountId: z.string().uuid('Please select a fee account'),
   amount: z.number().positive('Amount must be greater than 0'),
   payment_method: z.nativeEnum(PaymentMethod),
   mpesa_receipt: z.string().optional(),
@@ -31,14 +32,15 @@ type PaymentFormData = z.infer<typeof paymentSchema>
 interface PaymentFormProps {
   onSuccess: () => void
   defaultStudentId?: string
-  defaultFeeStructureId?: string
+  defaultFeeAccountId?: string
 }
 
-export default function PaymentForm({ onSuccess, defaultStudentId, defaultFeeStructureId }: PaymentFormProps) {
+export default function PaymentForm({ onSuccess, defaultStudentId, defaultFeeAccountId }: PaymentFormProps) {
   const [searchTerm, setSearch] = useState('')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [showAllAccounts, setShowAllAccounts] = useState(false)
   const { data: students } = useStudents()
-  const { data: feeStructures } = useFeeStructures()
+  const { history } = useStudentFeeHistory(selectedStudent?.id || '')
   const recordMutation = useRecordPayment()
   
   const {
@@ -54,16 +56,19 @@ export default function PaymentForm({ onSuccess, defaultStudentId, defaultFeeStr
       transaction_date: new Date().toISOString().slice(0, 16),
       payment_method: PaymentMethod.MPESA,
       studentId: defaultStudentId || '',
-      feeStructureId: defaultFeeStructureId || '',
+      feeAccountId: defaultFeeAccountId || '',
     }
   })
 
-  const selectedStudentId = watch('studentId')
-  const { data: balanceData } = useStudentBalance(selectedStudentId)
+  const selectedAccountId = watch('feeAccountId')
   const paymentMethod = watch('payment_method')
+  const selectedAccount = useMemo(
+    () => history.find((account) => account.id === selectedAccountId),
+    [history, selectedAccountId],
+  )
 
   useEffect(() => {
-    if (defaultStudentId && students) {
+    if (defaultStudentId && students?.length) {
       const student = students.find(s => s.id === defaultStudentId)
       if (student) setSelectedStudent(student)
     }
@@ -80,8 +85,22 @@ export default function PaymentForm({ onSuccess, defaultStudentId, defaultFeeStr
   }, [students, searchTerm, selectedStudent])
 
   const onSubmit = async (data: PaymentFormData) => {
+    const account = history.find((item) => item.id === data.feeAccountId)
+    if (!account) {
+      toast.error('Please select a valid fee account')
+      return
+    }
     try {
-      await recordMutation.mutateAsync(data)
+      await recordMutation.mutateAsync({
+        studentId: data.studentId,
+        feeStructureId: account.fee_structure.id,
+        amount: data.amount,
+        payment_method: data.payment_method,
+        mpesa_receipt: data.mpesa_receipt,
+        mpesa_phone: data.mpesa_phone,
+        transaction_date: data.transaction_date,
+        notes: data.notes,
+      })
       toast.success(`Payment of KES ${data.amount.toLocaleString('en-KE')} recorded`)
       reset()
       setSelectedStudent(null)
@@ -155,35 +174,62 @@ export default function PaymentForm({ onSuccess, defaultStudentId, defaultFeeStr
         )}
       </div>
 
-      {/* Fee Structure */}
+      {/* Fee Account */}
       <div className="space-y-2">
-        <Label>Fee Structure</Label>
+        <Label>Fee Account</Label>
         <select 
-          {...register('feeStructureId')}
+          {...register('feeAccountId')}
           className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-accent"
         >
-          <option value="">Select structure...</option>
-          {feeStructures?.map(fs => (
-            <option key={fs.id} value={fs.id}>
-              {fs.form.replace('_', ' ').toUpperCase()} · {fs.term.replace('_', ' ')} · {fs.academic_year} · KES {fs.total_amount.toLocaleString('en-KE')}
+          <option value="">Select account...</option>
+          {history
+            .filter((acc) => showAllAccounts || acc.status !== FeeAccountStatus.CLEARED)
+            .map((acc) => (
+            <option key={acc.id} value={acc.id}>
+              {acc.fee_structure.term.replace('_', ' ')} · {acc.fee_structure.academic_year} · Balance: KES {Number(acc.balance).toLocaleString('en-KE')} · {acc.status}
             </option>
           ))}
         </select>
-        {errors.feeStructureId && <p className="text-xs text-danger">{errors.feeStructureId.message}</p>}
+        <label className="inline-flex items-center gap-2 text-xs text-text-muted">
+          <input type="checkbox" checked={showAllAccounts} onChange={(e) => setShowAllAccounts(e.target.checked)} />
+          Show all accounts
+        </label>
+        {errors.feeAccountId && <p className="text-xs text-danger">{errors.feeAccountId.message}</p>}
       </div>
+
+      {selectedAccount && (
+        <div className="rounded-lg border border-border p-3 text-xs space-y-1">
+          <p>Billed: <span className="font-mono">KES {Number(selectedAccount.billed_amount).toLocaleString('en-KE')}</span></p>
+          <p>Paid: <span className="font-mono text-accent">KES {Number(selectedAccount.total_paid).toLocaleString('en-KE')}</span></p>
+          <p>
+            Balance:{' '}
+            <span className={cn('font-mono', Number(selectedAccount.balance) === 0 ? 'text-success' : Number(selectedAccount.balance) >= 5000 ? 'text-danger' : 'text-amber')}>
+              KES {Number(selectedAccount.balance).toLocaleString('en-KE')}
+            </span>
+          </p>
+          <ArrearsTag amount={Number(selectedAccount.arrears_brought_forward)} />
+        </div>
+      )}
 
       {/* Amount & Balance */}
       <div className="space-y-2">
         <Label>Amount</Label>
-        <Input 
+        <Input
           type="number" 
           placeholder="Enter amount (KES)" 
+          max={selectedAccount ? Number(selectedAccount.balance) : undefined}
           {...register('amount', { valueAsNumber: true })}
         />
-        {balanceData && (
-          <p className="text-xs font-medium text-amber">
-            Remaining balance: KES {balanceData.balance.toLocaleString('en-KE')}
-          </p>
+        {selectedAccount && <p className="text-xs font-medium text-amber">Remaining balance: KES {Number(selectedAccount.balance).toLocaleString('en-KE')}</p>}
+        {selectedAccount && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-7 px-2 text-xs"
+            onClick={() => setValue('amount', Number(selectedAccount.balance))}
+          >
+            Pay full balance
+          </Button>
         )}
         {errors.amount && <p className="text-xs text-danger">{errors.amount.message}</p>}
       </div>
@@ -244,9 +290,9 @@ export default function PaymentForm({ onSuccess, defaultStudentId, defaultFeeStr
       <Button 
         type="submit" 
         className="w-full bg-accent hover:bg-accent/90 text-bg font-bold h-11"
-        disabled={recordMutation.isPending}
+        disabled={recordMutation.isLoading}
       >
-        {recordMutation.isPending ? (
+        {recordMutation.isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Recording...

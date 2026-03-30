@@ -3,7 +3,7 @@
 import { useAuth } from '@/hooks/useAuth'
 import { useInbox } from '@/hooks/useComms'
 import { useIncidents, useOpenIncidents } from '@/hooks/useDiscipline'
-import { useDeficitTrajectory } from '@/hooks/useFinance'
+import { useDeficitTrajectory, useFeeStructures } from '@/hooks/useFinance'
 import { useStudents } from '@/hooks/useStudents'
 import PageHeader from '@/components/shared/PageHeader'
 import StatCard from '@/components/shared/StatCard'
@@ -12,7 +12,7 @@ import TriageSummaryCard from '@/components/principal/TriageSummaryCard'
 import AlertFeed from '@/components/principal/AlertFeed'
 import SeverityBadge from '@/components/discipline/SeverityBadge'
 import PriorityBadge from '@/components/comms/PriorityBadge'
-import { Form, Term, IncidentStatus } from '@/types'
+import { Form, IncidentStatus } from '@/types'
 import { useState } from 'react'
 import { format } from 'date-fns'
 import Link from 'next/link'
@@ -27,11 +27,11 @@ export default function PrincipalDashboard() {
   const { data: students } = useStudents()
   const { data: inbox, unreadCount } = useInbox()
   const { data: openIncidents } = useOpenIncidents()
-  const { data: trajectory } = useDeficitTrajectory(
-    selectedForm === 'ALL' ? Form.FORM_1 : selectedForm, 
-    Term.TERM_1, 
-    '2026'
+  const { feeStructures } = useFeeStructures()
+  const latestActive = feeStructures.find((f) =>
+    f.is_active && (selectedForm === 'ALL' ? true : f.form === selectedForm),
   )
+  const { trajectory } = useDeficitTrajectory(latestActive?.id || '')
 
   const firstName = user?.full_name.split(' ')[0]
   const today = format(new Date(), 'EEEE, dd MMMM yyyy')
@@ -55,7 +55,8 @@ export default function PrincipalDashboard() {
         <StatCard 
           label="Fee Collection Rate" 
           value={`${Math.round(collectionRate)}%`} 
-          color={collectionRate >= 80 ? "success" : collectionRate >= 50 ? "amber" : "danger"} 
+          sub={trajectory ? `KES ${Math.round(trajectory.projected_deficit).toLocaleString('en-KE')} projected deficit` : undefined}
+          color={trajectory?.risk_level === 'high' ? "danger" : trajectory?.risk_level === 'medium' ? "amber" : "success"} 
         />
         <StatCard 
           label="Open Incidents" 

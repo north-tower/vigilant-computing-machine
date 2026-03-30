@@ -24,7 +24,7 @@ export default function PaymentsPage() {
   // In a real app, there'd be a usePayments() hook for accountants.
   // For now, let's assume useStudentPayments('') or similar might fetch all if handled by backend,
   // or just use a placeholder for this specific view since the prompt didn't specify a global hook.
-  const { data: payments, isLoading } = useStudentPayments('') 
+  const { payments, isLoading } = useStudentPayments('')
 
   if (!isAuthenticated || !user) return null
 
@@ -90,6 +90,7 @@ export default function PaymentsPage() {
                 <tr className="bg-surface border-b border-border">
                   <th className="px-6 py-4 font-medium text-text-muted">Date</th>
                   <th className="px-6 py-4 font-medium text-text-muted">Student</th>
+                  <th className="px-6 py-4 font-medium text-text-muted">Term</th>
                   <th className="px-6 py-4 font-medium text-text-muted">Method</th>
                   <th className="px-6 py-4 font-medium text-text-muted">Reference</th>
                   <th className="px-6 py-4 font-medium text-text-muted text-right">Amount</th>
@@ -105,6 +106,13 @@ export default function PaymentsPage() {
                     <td className="px-6 py-4">
                       <div className="font-medium text-text">{payment.student.full_name}</div>
                       <div className="text-[11px] text-text-muted font-mono">{payment.student.admission_number}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                        {payment.student_fee_account
+                          ? `${payment.student_fee_account.fee_structure.form.replace('form_', 'Form ')} · ${payment.student_fee_account.fee_structure.term.replace('TERM_', 'T')} · ${payment.student_fee_account.fee_structure.academic_year}`
+                          : '—'}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">

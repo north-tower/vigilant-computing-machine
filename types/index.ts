@@ -191,7 +191,7 @@ export interface FeeStructure {
 export interface FeePayment { 
   id: string 
   student: Student 
-  fee_structure: FeeStructure 
+  student_fee_account: StudentFeeAccount | null
   amount: number 
   payment_method: PaymentMethod 
   mpesa_receipt: string | null 
@@ -202,17 +202,28 @@ export interface FeePayment {
   created_at: string 
 } 
 
-export interface FeeBalance { 
-  id: string 
-  student: Student 
-  fee_structure: FeeStructure 
-  total_billed: number 
-  total_paid: number 
-  balance: number 
-  last_payment_at: string | null 
-} 
+export enum FeeAccountStatus {
+  PENDING = 'PENDING',
+  PARTIAL = 'PARTIAL',
+  CLEARED = 'CLEARED',
+  OVERPAID = 'OVERPAID',
+}
 
-export interface FeeBalanceSummary extends FeeBalance {} 
+export interface StudentFeeAccount {
+  id: string
+  student: Student
+  fee_structure: FeeStructure
+  billed_amount: number
+  exemption_amount: number
+  exemption_reason: string | null
+  arrears_brought_forward: number
+  total_paid: number
+  balance: number
+  status: FeeAccountStatus
+  last_payment_at: string | null
+  created_at: string
+  updated_at: string
+}
 
 export interface MpesaTransaction { 
   id: string 
@@ -229,10 +240,14 @@ export interface MpesaTransaction {
 } 
 
 export interface DeficitTrajectory { 
+  fee_structure_id: string
   form: Form 
   term: Term 
   year: string 
+  total_students: number
   total_billed: number 
+  total_exemptions: number
+  effective_billed: number
   total_collected: number 
   collection_rate: number 
   daily_velocity: number 
@@ -241,6 +256,10 @@ export interface DeficitTrajectory {
   projected_collection: number 
   projected_deficit: number 
   risk_level: 'low' | 'medium' | 'high' 
+  accounts_pending: number
+  accounts_partial: number
+  accounts_cleared: number
+  accounts_overpaid: number
 } 
 
 export enum MessagePriority { 

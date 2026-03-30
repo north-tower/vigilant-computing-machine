@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/hooks/useAuth'
 import { useStudents } from '@/hooks/useStudents'
-import { useStudentBalance, useStudentPayments } from '@/hooks/useFinance'
+import { useStudentFeeHistory, useStudentPayments } from '@/hooks/useFinance'
 import { useStudentIncidents, useDisciplineScore } from '@/hooks/useDiscipline'
 import PageHeader from '@/components/shared/PageHeader'
 import StatCard from '@/components/shared/StatCard'
@@ -15,7 +15,6 @@ import { UserRole } from '@/types'
 import { format } from 'date-fns'
 import { Users, AlertTriangle, CheckCircle2, MessageSquare, CreditCard, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
 
 export default function ParentDashboard() {
   const { user, isAuthenticated } = useAuth()
@@ -27,10 +26,12 @@ export default function ParentDashboard() {
   // we'd have a switcher.
   const activeStudent = students?.[0]
   
-  const { data: balance, isLoading: balanceLoading } = useStudentBalance(activeStudent?.id || '')
+  const { history, isLoading: balanceLoading } = useStudentFeeHistory(activeStudent?.id || '')
   const { data: score, isLoading: scoreLoading } = useDisciplineScore(activeStudent?.id || '')
   const { data: incidents, isLoading: incidentsLoading } = useStudentIncidents(activeStudent?.id || '')
-  const { data: payments, isLoading: paymentsLoading } = useStudentPayments(activeStudent?.id || '')
+  const { payments, isLoading: paymentsLoading } = useStudentPayments(activeStudent?.id || '')
+  const balance = history[0]
+  const totalOutstanding = history.reduce((sum, item) => sum + Number(item.balance), 0)
 
   if (!isAuthenticated || !user) return null
 
@@ -78,9 +79,9 @@ export default function ParentDashboard() {
         />
         <StatCard 
           label="Fee Balance" 
-          value={`KES ${Number(balance?.balance || 0).toLocaleString('en-KE')}`} 
-          color={Number(balance?.balance || 0) > 0 ? "amber" : "success"}
-          sub={Number(balance?.balance || 0) > 0 ? "Outstanding" : "Cleared"}
+          value={`KES ${Number(totalOutstanding || 0).toLocaleString('en-KE')}`} 
+          color={Number(totalOutstanding || 0) > 0 ? "amber" : "success"}
+          sub={Number(totalOutstanding || 0) > 0 ? "Outstanding" : "Cleared"}
         />
         <StatCard 
           label="Discipline Score" 
@@ -109,7 +110,7 @@ export default function ParentDashboard() {
             
             <CollectionProgressBar 
               collected={Number(balance?.total_paid || 0)} 
-              total={Number(balance?.total_billed || 0)} 
+              total={Number(balance?.billed_amount || 0)} 
               label="Term 1 2026 Fees"
             />
 
@@ -126,7 +127,7 @@ export default function ParentDashboard() {
               <div className="bg-bg border border-border p-4 rounded-lg">
                 <p className="text-[10px] text-text-faint uppercase font-bold tracking-widest mb-1">Term Balance</p>
                 <p className="text-sm font-mono font-bold text-danger">
-                  KES {Number(balance?.balance || 0).toLocaleString()}
+                  KES {Number(totalOutstanding || 0).toLocaleString()}
                 </p>
                 <p className="text-[10px] text-text-faint mt-1">Due by end of term</p>
               </div>
@@ -200,7 +201,7 @@ export default function ParentDashboard() {
                 <AlertTriangle className="w-5 h-5 text-amber shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-text">Fee Balance Reminder</p>
-                  <p className="text-xs text-text-muted mt-1">A balance of KES {Number(balance?.balance || 0).toLocaleString()} is remaining for Term 1.</p>
+                  <p className="text-xs text-text-muted mt-1">A balance of KES {Number(totalOutstanding || 0).toLocaleString()} is remaining for this student.</p>
                 </div>
               </div>
               <div className="p-4 bg-success/10 border border-success/20 rounded-lg flex items-start gap-3">

@@ -23,7 +23,7 @@ export default function DeficitChart({ trajectory }: DeficitChartProps) {
   // Generate daily data for the chart (assuming a 90-day term)
   const chartData = Array.from({ length: 90 }, (_, i) => {
     const day = i + 1
-    const totalBilled = trajectory.total_billed
+    const totalBilled = trajectory.effective_billed
     const projectedFinal = trajectory.projected_collection
     
     // Actual: up to days_elapsed
@@ -115,7 +115,7 @@ export default function DeficitChart({ trajectory }: DeficitChartProps) {
             />
             <Tooltip content={<CustomTooltip />} />
             <ReferenceLine 
-              y={trajectory.total_billed} 
+              y={trajectory.effective_billed} 
               stroke="var(--danger)" 
               strokeDasharray="3 3" 
               label={{ value: 'Target', fill: 'var(--text-muted)', fontSize: 10, position: 'right' }} 
@@ -126,12 +126,14 @@ export default function DeficitChart({ trajectory }: DeficitChartProps) {
         </ResponsiveContainer>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {[
-          { label: 'Collection Rate', value: `${Math.round(trajectory.collection_rate)}%` },
-          { label: 'Days Remaining', value: trajectory.days_remaining },
+          { label: 'Daily Velocity', value: `KES ${Math.round(trajectory.daily_velocity).toLocaleString('en-KE')}/day` },
+          { label: 'Collection Rate', value: `${Math.round(trajectory.collection_rate)}% collected` },
+          { label: 'Days Remaining', value: `${trajectory.days_remaining} days left` },
           { label: 'Projected Deficit', value: `KES ${Math.round(trajectory.projected_deficit).toLocaleString()}`, color: 'text-danger' },
-          { label: 'Daily Velocity', value: `KES ${Math.round(trajectory.daily_velocity).toLocaleString()}` },
+          { label: 'Cleared', value: `${trajectory.accounts_cleared}/${trajectory.total_students} cleared` },
+          { label: 'Pending', value: `${trajectory.accounts_pending} pending` },
         ].map((metric) => (
           <div key={metric.label} className="bg-surface border border-border rounded-lg p-3 text-center">
             <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{metric.label}</p>

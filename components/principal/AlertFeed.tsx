@@ -2,10 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
-import { AttendanceSummary, DisciplineIncident, DeficitTrajectory, Message, IncidentStatus } from '@/types'
+import { AttendanceSummary, DisciplineIncident, DeficitTrajectory, Message, IncidentStatus, FeeStructure } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
 import { AlertTriangle, CheckCircle2, Info, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 interface Alert {
   id: string
@@ -26,8 +27,13 @@ export default function AlertFeed() {
     queryFn: async () => (await api.get('/discipline/open')).data 
   })
   const { data: trajectory } = useQuery<DeficitTrajectory>({ 
-    queryKey: ['finance', 'trajectory', 'all'], 
-    queryFn: async () => (await api.get('/finance/trajectory')).data 
+    queryKey: ['finance', 'trajectory', 'latest'],
+    queryFn: async () => {
+      const structures = (await api.get('/finance/fee-structures')).data as FeeStructure[]
+      const active = structures.find((s) => s.is_active)
+      if (!active) return null as any
+      return (await api.get('/finance/fee-accounts/trajectory', { params: { feeStructureId: active.id } })).data
+    }, 
   })
   const { data: messages } = useQuery<Message[]>({ 
     queryKey: ['inbox', { is_read: false }], 
@@ -62,12 +68,12 @@ export default function AlertFeed() {
   })
 
   // 3. Finance alerts
-  if (trajectory && trajectory.risk_level === 'high') {
+  if (trajectory && trajectory.total_students > 0 && trajectory.accounts_pending / trajectory.total_students > 0.1) {
     alerts.push({
       id: 'fin-deficit',
       type: 'finance',
-      message: `High fee deficit risk for ${trajectory.form.replace('_', ' ')}`,
-      severity: 'high',
+      message: `KES ${Math.round(trajectory.projected_deficit).toLocaleString('en-KE')} projected term deficit — ${trajectory.risk_level} risk`,
+      severity: trajectory.risk_level === 'high' ? 'high' : 'medium',
       timestamp: new Date(),
     })
   }
@@ -109,7 +115,7 @@ export default function AlertFeed() {
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden divide-y divide-border">
       {sortedAlerts.map((alert) => (
-        <div key={alert.id} className="p-4 flex items-start gap-4 hover:bg-surface-hover transition-colors group">
+        <Link href={alert.type === 'finance' ? '/accountant' : '#'} key={alert.id} className="p-4 flex items-start gap-4 hover:bg-surface-hover transition-colors group">
           <div className={cn(
             "mt-1 w-3 h-3 rounded-full shrink-0",
             alert.severity === 'critical' || alert.severity === 'high' ? "bg-danger" : 
@@ -125,7 +131,7 @@ export default function AlertFeed() {
               {formatDistanceToNow(alert.timestamp, { addSuffix: true })}
             </div>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   )
