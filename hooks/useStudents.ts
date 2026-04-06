@@ -43,6 +43,8 @@ export function useCreateStudent() {
     stream: Stream; 
     gender: 'male' | 'female'; 
     date_of_birth?: string;
+    parent_name?: string;
+    parent_phone?: string;
   }>({
     mutationFn: async (studentData) => {
       const { data } = await api.post('/students', studentData)

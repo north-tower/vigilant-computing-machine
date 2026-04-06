@@ -18,6 +18,15 @@ const studentSchema = z.object({
   stream: z.nativeEnum(Stream),
   gender: z.enum(['male', 'female']),
   date_of_birth: z.string().optional(),
+  parent_name: z.string().optional(),
+  parent_phone: z
+    .string()
+    .optional()
+    .refine(
+      (val) =>
+        !val || /^(\+2547\d{8}|2547\d{8}|07\d{8})$/.test(val.trim()),
+      'Use +2547XXXXXXXX, 2547XXXXXXXX, or 07XXXXXXXX',
+    ),
 })
 
 type StudentFormData = z.infer<typeof studentSchema>
@@ -105,6 +114,29 @@ export default function StudentForm({ onSuccess }: StudentFormProps) {
       <div className="space-y-2">
         <Label>Date of Birth</Label>
         <Input type="date" {...register('date_of_birth')} />
+      </div>
+
+      <div className="border border-border rounded-xl p-4 space-y-4">
+        <p className="text-xs uppercase tracking-wider text-text-muted font-semibold">
+          Parent (optional - auto link/create)
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Parent Name</Label>
+            <Input placeholder="Jane Parent" {...register('parent_name')} />
+          </div>
+          <div className="space-y-2">
+            <Label>Parent Phone</Label>
+            <Input placeholder="+254712345678" {...register('parent_phone')} />
+            {errors.parent_phone && (
+              <p className="text-xs text-danger">{errors.parent_phone.message}</p>
+            )}
+          </div>
+        </div>
+        <p className="text-xs text-text-muted">
+          If phone exists for a parent account, student will be linked. Otherwise a parent account
+          is auto-created using this phone.
+        </p>
       </div>
 
       <Button 
